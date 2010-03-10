@@ -18,6 +18,7 @@ public class Piece {
 	private int blockSize;
 	private int finalBlockSize;
 	private Object lock;
+	private ThroughputMonitor monitor;
 	
 	/**
 	 * Creates a Piece with the given pieceId and pieceSize, where
@@ -29,7 +30,7 @@ public class Piece {
 	 * @param blockSize The size of block to use when downloading this piece.
 	 * @param pieceSize The total size, in bytes, of this piece.
 	 **/
-	public Piece(int pieceId, int blockSize, int pieceSize) {
+	public Piece(int pieceId, int blockSize, int pieceSize, ThroughputMonitor monitor) {
 		this.pieceId = pieceId;
 		this.blockSize = blockSize;
 		this.data = new byte[pieceSize];
@@ -41,6 +42,7 @@ public class Piece {
 			this.block = new boolean[(pieceSize/blockSize) +1];
 		}
 		this.lock = new Object();
+		this.monitor = monitor;
 	}
 	
 	/**
@@ -55,6 +57,7 @@ public class Piece {
 	 **/
 	public boolean saveBlock(int number, byte[] data, int offset, int length) {
 		boolean success = false;
+		monitor.dataReceived(length);
 		synchronized(lock) {
 			if(number < 0 || number >= block.length) {
 				success = false;

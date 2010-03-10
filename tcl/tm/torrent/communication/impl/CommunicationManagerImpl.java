@@ -12,7 +12,7 @@ import tcl.tm.torrent.communication.peer.impl.StandardPeer;
 import tcl.tm.torrent.communication.peer.impl.FastPeerImpl;
 import tcl.tm.torrent.communication.util.ConnectionSeeker;
 import tcl.tm.torrent.communication.util.Piece;
-
+import tcl.tm.torrent.communication.util.ThroughputMonitor;
 
 
 /**
@@ -49,6 +49,7 @@ public class CommunicationManagerImpl implements CommunicationManager
 	private Map<Integer,Piece> abandonedPieces;
 	private boolean endgame;
 	
+	private ThroughputMonitor speed;
 	
 	public CommunicationManagerImpl(Torrent torrent) {
 		this.torrent = torrent;
@@ -56,8 +57,8 @@ public class CommunicationManagerImpl implements CommunicationManager
 		this.running = true;
 		this.endgame = false;
 		this.seeker = new ConnectionSeeker(torrent);
-		
-
+		this.speed = new ThroughputMonitor();
+		this.speed.start();
 		
 		this.lock = new Object();
 		this.peerLock = new Object();
@@ -107,13 +108,7 @@ public class CommunicationManagerImpl implements CommunicationManager
 	 * @return The speed this Torrent is downloading at.
 	 **/
 	public int getConnectionSpeed() {
-		int sum = 0;
-		synchronized(peerLock) {
-			for(Peer p : peers.values()) {
-				sum += p.getConnectionSpeed();
-			}
-		}
-		return sum;
+		return speed.getSpeed();
 	}
 	
 	/**
@@ -159,6 +154,7 @@ public class CommunicationManagerImpl implements CommunicationManager
 		for(Peer p: temp.values()) {
 			p.close();
 		}
+		speed.close();
 	}
 	
 	/**
@@ -200,7 +196,7 @@ public class CommunicationManagerImpl implements CommunicationManager
 				} else {
 					length = torrent.getInformationManager().getTorrentInfo().getPieceLength();
 				}
-				assigned = new Piece(lowestId,16 * 1024,length);
+				assigned = new Piece(lowestId,16 * 1024,length, speed);
 			}
 			if(lowestId >= 0) {
 				inProgress[lowestId] = true;
@@ -370,7 +366,7 @@ public class CommunicationManagerImpl implements CommunicationManager
 			} else {
 				length = torrent.getInformationManager().getTorrentInfo().getPieceLength();
 			}
-			return new Piece(lowestId,16 * 1024,length);
+			return new Piece(lowestId,16 * 1024,length, speed);
 		} else {
 			return null;
 		}
