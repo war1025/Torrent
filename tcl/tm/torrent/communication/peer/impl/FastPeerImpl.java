@@ -23,6 +23,7 @@ import tcl.tm.torrent.communication.util.Piece;
 
 import java.net.Socket;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ public class FastPeerImpl implements FastPeer {
 	
 	private Socket peerConnection;
 	private ThrottledInputStream peerInput;
-	private ThrottledOutputStream peerOutput;
+	private OutputStream peerOutput;
 
 	private CommunicationManager cm;
 	private FileAccessManager fam;
@@ -86,7 +87,7 @@ public class FastPeerImpl implements FastPeer {
 		
 		try{
 			this.peerInput = new ThrottledInputStream(peerConnection.getInputStream());
-			this.peerOutput = new ThrottledOutputStream(peerConnection.getOutputStream(),10000);
+			this.peerOutput = peerConnection.getOutputStream();
 		} catch(IOException e) {
 			throw new IllegalStateException(e.getMessage());
 		}
@@ -131,7 +132,7 @@ public class FastPeerImpl implements FastPeer {
 	 * @return The upload speed in bytes
 	 **/
 	public int getUploadSpeed() {
-		return peerOutput.getConnectionSpeed();
+		return -1;
 	}
 
 	/**

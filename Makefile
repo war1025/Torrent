@@ -7,3 +7,6 @@ compile :
 
 clean :
 	git clean -f
+
+run :
+	java -Djava.library.path=/usr/lib/jni/ tcl.TorrentClient

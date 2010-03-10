@@ -22,6 +22,8 @@ import tcl.tm.torrent.communication.util.Piece;
 
 import java.net.Socket;
 import java.io.IOException;
+import java.io.OutputStream;
+
 
 /**
  * This class deals with connections to a peer.
@@ -43,7 +45,7 @@ public class StandardPeer implements Peer {
 	
 	private Socket peerConnection;
 	private ThrottledInputStream peerInput;
-	private ThrottledOutputStream peerOutput;
+	private OutputStream peerOutput;
 
 	private CommunicationManager cm;
 	private FileAccessManager fam;
@@ -77,7 +79,7 @@ public class StandardPeer implements Peer {
 		
 		try{
 			this.peerInput = new ThrottledInputStream(peerConnection.getInputStream());
-			this.peerOutput = new ThrottledOutputStream(peerConnection.getOutputStream(),10000);
+			this.peerOutput = peerConnection.getOutputStream();
 		} catch(IOException e) {
 			throw new IllegalStateException(e.getMessage());
 		}
@@ -117,7 +119,7 @@ public class StandardPeer implements Peer {
 	 * @return The upload speed in bytes
 	 **/
 	public int getUploadSpeed() {
-		return peerOutput.getConnectionSpeed();
+		return -1;
 	}
 
 	/**
