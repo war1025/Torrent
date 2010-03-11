@@ -1,17 +1,17 @@
 package tcl.tm.torrent.communication.peer.util;
 
 public class PendingRequest {
-	
+
 	private int index;
 	private int offset;
 	private int length;
-	
+
 	public PendingRequest(int index, int offset, int length) {
 		this.index = index;
 		this.offset = offset;
 		this.length = length;
 	}
-	
+
 	public boolean equals(Object o) {
 		if( o instanceof PendingRequest) {
 			PendingRequest p = (PendingRequest) o;
@@ -19,15 +19,15 @@ public class PendingRequest {
 		}
 		return false;
 	}
-	
+
 	public int hashCode() {
-		int hash = 31;
-		hash *= index;
-		hash += 31;
-		hash *= offset;
-		hash += 31;
-		hash *= length;
-		
+		int hash = index;
+		hash *= 31;
+		hash += offset;
+		hash *= 31;
+		hash += length;
+		hash *= 31;
+
 		return hash;
 	}
 }

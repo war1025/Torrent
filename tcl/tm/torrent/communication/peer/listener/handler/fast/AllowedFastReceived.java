@@ -15,7 +15,6 @@ public class AllowedFastReceived implements PeerEventHandler {
 	}
 
 	public void handle(PeerEvent e) {
-		System.out.println("Got AllowedFast: " + parseLength(e.getData(),0));
 		synchronized(peer.getFastLock()) {
 			peer.getAllowedFast().add(parseLength(e.getData(),0));
 		}

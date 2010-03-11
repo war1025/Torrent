@@ -21,9 +21,7 @@ public class RejectReceived implements PeerEventHandler {
 		int piece = parseLength(e.getData(),0);
 		int offset = parseLength(e.getData(),4);
 		int length = parseLength(e.getData(),8);
-		
-		System.out.println("Got Piece Reject: " + piece + " " + offset + " " + length);
-		
+
 		synchronized(peer.getFastLock()) {
 			peer.getPendingRequests().remove(new PendingRequest(piece,offset,length));
 			if(peer.getPendingRequests().size() == 0) {
