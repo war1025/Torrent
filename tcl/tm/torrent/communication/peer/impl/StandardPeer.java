@@ -137,7 +137,7 @@ public class StandardPeer implements Peer {
 	 * @return This Peer's maximum allowed download speed.
 	 **/
 	public int getThrottleSpeed() {
-		return peerInput.getThrottleSpeed();
+		return -1; //peerInput.getThrottleSpeed();
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class StandardPeer implements Peer {
 	 * @param throttle The maximum speed this Peer may download from us.
 	 **/
 	public void setThrottleSpeed(int throttle) {
-		peerInput.setThrottleSpeed(throttle);
+		//peerInput.setThrottleSpeed(throttle);
 	}
 
 	/**

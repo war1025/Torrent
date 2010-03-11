@@ -24,6 +24,7 @@ import tcl.tm.torrent.communication.util.Piece;
 import java.net.Socket;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.InputStream;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -47,7 +48,7 @@ public class FastPeerImpl implements FastPeer {
 	private boolean amChoking;
 	
 	private Socket peerConnection;
-	private ThrottledInputStream peerInput;
+	private InputStream peerInput;
 	private OutputStream peerOutput;
 
 	private CommunicationManager cm;
@@ -86,7 +87,7 @@ public class FastPeerImpl implements FastPeer {
 		this.name = peerConnection.getInetAddress().toString();
 		
 		try{
-			this.peerInput = new ThrottledInputStream(peerConnection.getInputStream());
+			this.peerInput = peerConnection.getInputStream();
 			this.peerOutput = peerConnection.getOutputStream();
 		} catch(IOException e) {
 			throw new IllegalStateException(e.getMessage());
@@ -141,7 +142,7 @@ public class FastPeerImpl implements FastPeer {
 	 * @return This Peer's download speed in bytes
 	 **/
 	public int getConnectionSpeed() {
-		return peerInput.getConnectionSpeed();
+		return -1;
 	}
 
 	/**
@@ -150,7 +151,7 @@ public class FastPeerImpl implements FastPeer {
 	 * @return This Peer's maximum allowed download speed.
 	 **/
 	public int getThrottleSpeed() {
-		return peerInput.getThrottleSpeed();
+		return -1;
 	}
 
 	/**
@@ -159,7 +160,7 @@ public class FastPeerImpl implements FastPeer {
 	 * @param throttle The maximum speed this Peer may download from us.
 	 **/
 	public void setThrottleSpeed(int throttle) {
-		peerInput.setThrottleSpeed(throttle);
+		//peerInput.setThrottleSpeed(throttle);
 	}
 
 	/**
