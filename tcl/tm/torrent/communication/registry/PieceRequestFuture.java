@@ -2,8 +2,10 @@ package tcl.tm.torrent.communication.registry;
 
 
 
-public interface PieceRequest {
+public interface PieceRequestFuture {
 
 	public Piece getPiece();
+
+	public boolean getSuccess();
 
 }
