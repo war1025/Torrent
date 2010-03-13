@@ -9,7 +9,7 @@ public interface PieceRegistry {
 
 	public void close();
 
-	public PieceRequestFuture requestPiece(boolean[] bitfield, int piecesCompleted);
+	public Piece requestPiece(boolean[] bitfield, int piecesCompleted);
 
 	public boolean returnPiece(Piece p);
 
