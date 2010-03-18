@@ -53,7 +53,7 @@ public class TorrentUIImpl implements TorrentUI {
 	}
 
 	public List<Map<String,String>> GetTorrentStats() {
-		return uim.getTorrentStats(0);
+		return uim.getTorrentStats();
 	}
 	
 	public void ShutDown() {
