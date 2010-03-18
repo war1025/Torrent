@@ -14,8 +14,7 @@ import tcl.uim.impl.UIManagerImpl;
  * @author Wayne Rowcliffe
  *
  **/
-public class TorrentClient 
-{
+public class TorrentClient {
 	//main method
 	public static void main(String[] args) {
 		
