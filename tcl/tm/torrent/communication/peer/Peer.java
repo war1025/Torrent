@@ -1,12 +1,11 @@
 package tcl.tm.torrent.communication.peer;
 
 import tcl.tm.torrent.communication.util.Piece;
-import tcl.tm.torrent.communication.util.Throttleable;
 
 import java.io.Closeable;
 
 
-public interface Peer extends Throttleable, Closeable {
+public interface Peer extends Closeable {
 	
 	public void setInterested(boolean interested);
 	
@@ -41,7 +40,5 @@ public interface Peer extends Throttleable, Closeable {
 	public void notifyPieceComplete();
 	
 	public void issueHave(int id);
-	
-	public int getUploadSpeed();
 	
 }

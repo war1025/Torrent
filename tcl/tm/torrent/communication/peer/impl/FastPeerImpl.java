@@ -17,8 +17,6 @@ import tcl.tm.torrent.file.FileAccessFuture;
 import tcl.tm.torrent.info.TorrentInfo;
 import tcl.tm.torrent.info.StatsInfo;
 
-import tcl.tm.torrent.communication.util.ThrottledInputStream;
-import tcl.tm.torrent.communication.util.ThrottledOutputStream;
 import tcl.tm.torrent.communication.util.Piece;
 
 import java.net.Socket;
@@ -125,42 +123,6 @@ public class FastPeerImpl implements FastPeer {
 		
 		peerSender.sendBitfield();
 		peerSender.issueUnchoke();
-	}
-
-	/**
-	 * Get the upload speed from this Peer
-	 * 
-	 * @return The upload speed in bytes
-	 **/
-	public int getUploadSpeed() {
-		return -1;
-	}
-
-	/**
-	 * Get the speed this Peer is dowloading from us at.
-	 * 
-	 * @return This Peer's download speed in bytes
-	 **/
-	public int getConnectionSpeed() {
-		return -1;
-	}
-
-	/**
-	 * Get the maximum speed this Peer may download from us.
-	 * 
-	 * @return This Peer's maximum allowed download speed.
-	 **/
-	public int getThrottleSpeed() {
-		return -1;
-	}
-
-	/**
-	 * Set the maximum speed this Peer may download from us.
-	 * 
-	 * @param throttle The maximum speed this Peer may download from us.
-	 **/
-	public void setThrottleSpeed(int throttle) {
-		//peerInput.setThrottleSpeed(throttle);
 	}
 
 	/**

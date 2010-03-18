@@ -15,22 +15,7 @@ import java.util.Map;
  *
  */
 public interface UIManager extends Runnable, Closeable {
-	/**
-	 * Method that will return the information that you request, all of this information is mapped
-	 * Right now you will input the file name and the property you are requesting for that file
-	 * Property Available
-	 * 
-	 * Use the PropertiesAvalable method so you know which things you can play with
-	 * 
-	 * In the case of filename and filesize, if there are more than one file, the information will
-	 * be returned in more array
-	 * 
-	 * @param property one of the properties available from above
-	 * @param filePath the filePath of the file you are requesting information about
-	 * @return the string array of the information being returned
-	 */
-	public String[] get(String property, String filePath);
-	
+
 	/**
 	 * This method will start the torrent downlaod, this will resume a download if it has 
 	 * ready been downloaded before
@@ -38,12 +23,6 @@ public interface UIManager extends Runnable, Closeable {
 	 * @param filePath the path to the .torrent file that you will be downloading
 	 * @return ture if it has started downloading false otherwise
 	 */
-	
-	/**
-	 * This method will return all of the properties about all torrents
-	 */
-	public String[][] getAll();
-
 	public boolean start(String filePath);
 	
 	/**
@@ -95,14 +74,6 @@ public interface UIManager extends Runnable, Closeable {
 	 */
 	public String[] getTorrentsAvailable();
 	
-	/**
-	 * This method will return a list of al the properties avalable
-	 * 
-	 * @return The String array of Properties Available
-	 */
-	public String[] getPropertiesAvailable();
-	
-	public TorrentStats[] getTorrentStats();
-	
-	public List<Map<String,String>> getTorrentStats(int i);
+	public List<Map<String,String>> getTorrentStats();
+
 }
