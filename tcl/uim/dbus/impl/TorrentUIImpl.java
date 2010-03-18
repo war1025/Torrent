@@ -19,7 +19,7 @@ import java.io.IOException;
  */
 public class TorrentUIImpl implements TorrentUI {
 	
-	UIManager uim;
+	private UIManager uim;
 	public TorrentUIImpl() {}
 	
 	

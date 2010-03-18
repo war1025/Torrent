@@ -11,21 +11,6 @@ import java.util.HashMap;
 
 public class StatCreator {
 	
-	public static TorrentStats[] createStats(TorrentManager tm) {
-		String[] torrents = tm.getTorrentsAvailable();
-		TorrentStats[] stats = new TorrentStats[torrents.length];
-		for(int i = 0; i < torrents.length; i++) {
-			Torrent t = tm.getTorrent(torrents[i]);
-			if(t != null) {
-				stats[i] = new TorrentStats(getName(t),getEta(t),getSpeed(t),getProgress(t),
-												getBytesLeft(t),getBytesDownloaded(t),getPiecesLeft(t),getPeers(t),torrents[i]);
-			} else {
-				stats[i] = new TorrentStats("","","","","","","","","");
-			}
-		}
-		return stats;
-	}
-	
 	public static List<Map<String,String>> createDBusStats(TorrentManager tm) {
 		String[] torrents = tm.getTorrentsAvailable();
 		List<Map<String,String>> stats = new ArrayList<Map<String,String>>();
