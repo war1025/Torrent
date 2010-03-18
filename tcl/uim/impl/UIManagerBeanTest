@@ -1,0 +1,123 @@
+package tcl.uim.impl;
+
+import tcl.tm.TorrentManager;
+import tcl.uim.UIManager;
+import tcl.uim.ui.TorrentUI;
+import tcl.uim.ui.impl.TorrentUIImpl;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.MalformedObjectNameException;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.NotCompliantMBeanException;
+import java.lang.management.ManagementFactory;
+
+import java.io.Closeable;
+
+public class UIManagerBeanTest implements UIManager, Closeable
+{
+	
+	private TorrentUI tui;
+	private boolean isClosed;
+	
+	
+	public UIManagerBeanTest(TorrentManager tm) 
+	{
+		TorrentUIImpl tuii = new TorrentUIImpl();
+		tuii.setUIManager(this);
+		tui = tuii;
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+
+		try {
+			// Construct the ObjectName for the TorrentUI MBean we will register
+			ObjectName mbeanName = new ObjectName("tcl.uim.ui:type=TorrentUI");
+
+			// Register the TorrentUI MXBean
+    	    mbs.registerMBean(tui, mbeanName);
+		} catch(MalformedObjectNameException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e.getMessage());
+		} catch(InstanceAlreadyExistsException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e.getMessage());
+		} catch(MBeanRegistrationException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e.getMessage());
+		} catch(NotCompliantMBeanException e) {
+			e.printStackTrace();
+			throw new IllegalStateException(e.getMessage());
+		}
+	}
+	
+	public void run()
+	{
+		while(!isClosed()) {
+			try {
+				Thread.sleep(5000);
+			} catch(InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void close() {
+		isClosed = true;
+	}
+	
+	private synchronized boolean isClosed() {
+		return isClosed;
+	}
+
+	@Override
+	public String[] get(String property, String filePath) {
+		if(property.equals("A")) {
+			return new String[] {"I like you",filePath};
+		} else if(property.equals("B")) {
+			return new String[] {"You smell funny", filePath};
+		} 
+		return new String[] {"MonkeyBucket"};
+	}
+
+	@Override
+	public String[] getTorrentsAvailable() {
+		return new String[] {"a","B","3","IV"};
+	}
+
+	@Override
+	public boolean isComplete(String filePath) {
+		return filePath.equals("A");
+	}
+
+	@Override
+	public boolean relocate(String filePath, String newFilePath) {
+		return filePath.equals("A");
+	}
+
+	@Override
+	public boolean remove(String filePath) {
+		return filePath.equals("A");
+	}
+
+	@Override
+	public boolean start(String filePath) {
+		return filePath.equals("A");
+	}
+
+	@Override
+	public boolean stop(String filePath) {
+		return filePath.equals("A");
+	}
+
+	@Override
+	public String[] getPropertiesAvailable() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String[][] getAll() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

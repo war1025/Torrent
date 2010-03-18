@@ -1,5 +1,7 @@
 package tcl.uim;
 
+import tcl.uim.util.TorrentStats;
+
 import java.io.Closeable;
 
 import java.util.List;

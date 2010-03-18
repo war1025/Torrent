@@ -5,6 +5,7 @@ import tcl.uim.UIManager;
 import tcl.uim.dbus.TorrentUI;
 import tcl.uim.dbus.impl.TorrentUIImpl;
 
+import tcl.uim.util.TorrentStats;
 import tcl.uim.util.StatCreator;
 
 import java.util.List;

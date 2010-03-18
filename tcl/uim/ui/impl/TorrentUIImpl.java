@@ -1,10 +1,8 @@
-package tcl.uim.dbus.impl;
+package tcl.uim.ui.impl;
 
 import tcl.uim.UIManager;
-import tcl.uim.dbus.TorrentUI;
-
-import java.util.List;
-import java.util.Map;
+import tcl.uim.ui.TorrentUI;
+import tcl.uim.util.TorrentStats;
 
 import java.io.IOException;
 
@@ -14,7 +12,7 @@ import java.io.IOException;
  * pretty easy to follow.
  * 
  * 
- * @author Wayne Rowcliffe
+ * @author Anthony Milosch
  *
  */
 public class TorrentUIImpl implements TorrentUI {
@@ -27,45 +25,52 @@ public class TorrentUIImpl implements TorrentUI {
 	public void setUIManager(UIManager uim) {
 		this.uim = uim;
 	}
-	
-	public String[] GetTorrentsAvailable() {
+	public String[] get(String property, String filePath) {
+		return uim.get(property, filePath);
+	}
+
+	public String[] getTorrentsAvailable() {
 		return uim.getTorrentsAvailable();
 	}
 
-	public boolean IsComplete(String filePath) {
+	public boolean isComplete(String filePath) {
 		return uim.isComplete(filePath);
 	}
 
-	public boolean Relocate(String filePath, String newFilePath) {
+	public boolean relocate(String filePath, String newFilePath) {
 		return uim.relocate(filePath, newFilePath);
 	}
 
-	public boolean Remove(String filePath) {
+	public boolean remove(String filePath) {
 		return uim.remove(filePath);
 	}
 
-	public boolean Start(String filePath) {
+	public boolean start(String filePath) {
 		return uim.start(filePath);
 	}
 
-	public boolean Stop(String filePath) {
+	public boolean stop(String filePath) {
 		return uim.stop(filePath);
 	}
 
-	public List<Map<String,String>> GetTorrentStats() {
+	public String[] getPropertiesAvailable() {
+		return uim.getPropertiesAvailable();
+	}
+
+	public String[][] getAll() {
+		return uim.getAll();
+	}
+	
+	public TorrentStats[] getTorrentStats() {
 		return uim.getTorrentStats();
 	}
 	
-	public void ShutDown() {
+	public void shutDown() {
 		try {
 			uim.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public boolean isRemote() {
-		return false;
 	}
 	
 }
