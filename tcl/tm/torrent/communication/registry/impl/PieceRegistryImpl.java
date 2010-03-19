@@ -211,6 +211,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 				success = fam.savePiece(p.getPieceId(),p.getData()).getSuccess();
 				System.out.println("Verifying Returned Piece: " + p.getPieceId() + " " + success);
 				if(success) {
+					multiBitField[p.getPieceId()] = -1;
 					peerRegistry.notifyHave(p.getPieceId());
 				}
 			}

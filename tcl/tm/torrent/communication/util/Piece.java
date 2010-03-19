@@ -101,7 +101,7 @@ public class Piece {
 		synchronized(lock) {
 			if(number < 0 || number >= block.length) {
 				success = false;
-			} else if((length == blockSize) || ((number == block.length -1) && (length == finalBlockSize))) {
+			} else if(!block[number] && ((length == blockSize) || ((number == block.length -1) && (length == finalBlockSize)))) {
 				System.arraycopy(data,offset,this.data,number * blockSize,length);
 				block[number] = true;
 			}
