@@ -17,15 +17,15 @@ import java.io.IOException;
 
 public class PeerListenerImpl implements PeerListener {
 
-	private Peer peer;	
+	private Peer peer;
 	private InputStream peerInput;
 	protected Map<Integer, PeerEventHandler> handlers;
-	
+
 	public PeerListenerImpl(Peer peer, PeerSender sender, InputStream peerInput) {
 		this.peer = peer;
 		this.peerInput = peerInput;
 		this.handlers = new HashMap<Integer, PeerEventHandler>();
-		
+
 		handlers.put(-2, new KeepAliveReceived(peer));
 		handlers.put(0, new ChokeReceived(peer));
 		handlers.put(1, new UnchokeReceived(peer));
@@ -36,9 +36,9 @@ public class PeerListenerImpl implements PeerListener {
 		handlers.put(6, new RequestReceived(sender));
 		handlers.put(7, new PieceReceived(peer));
 		handlers.put(8, new CancelReceived(peer));
-		
+
 	}
-	
+
 	/**
 	 * Reads messages as they are received and forwards them to the appropriate handlers
 	 **/

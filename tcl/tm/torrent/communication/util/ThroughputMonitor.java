@@ -20,7 +20,7 @@ public class ThroughputMonitor {
 
 	public void start() {
 		running = true;
-		new Thread(new Updater()).start();
+		new Thread(new Updater(), "Throughput Monitor").start();
 	}
 
 	public void close() {

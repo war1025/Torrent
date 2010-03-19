@@ -66,6 +66,8 @@ public class PieceRegistryImpl implements PieceRegistry {
 		this.running = true;
 		this.runLock = new Object();
 
+		this.lock = new Object();
+
 		new Thread(new PieceRegistrar(),"PieceRegistry : " + torrent.getInformationManager().getTorrentInfo().getTorrentName()).start();
 
 	}
@@ -163,7 +165,6 @@ public class PieceRegistryImpl implements PieceRegistry {
 	}
 
 	public Piece requestPiece(boolean[] bitfield, int piecesCompleted) {
-		System.out.println("Requesting piece");
 		if(isRunning()) {
 			PieceRequest p = new PieceRequest(bitfield, piecesCompleted);
 			pieceQueue.put(p);
@@ -244,7 +245,6 @@ public class PieceRegistryImpl implements PieceRegistry {
 	public boolean peerInteresting(boolean[] bitfield) {
 		boolean interesting = false;
 		synchronized(lock) {
-			System.out.println("Piece Registry Deciding Interesting");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && !(inProgress[i]) && multiBitField[i] > 0) {
 					interesting = true;
@@ -257,7 +257,6 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 	public void removeBitfield(boolean[] bitfield) {
 		synchronized(lock) {
-			System.out.println("Piece Registry Removing Bitfield");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && (multiBitField[i] > 0)) {
 					multiBitField[i] -= 1;

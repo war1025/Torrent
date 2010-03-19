@@ -116,6 +116,10 @@ public class FastRetriever implements PeerRetriever {
 			}
 			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
 		}
+		if(!peer.isRunning() && peer.getCurrentPiece() != null) {
+			cm.returnPiece(peer.getCurrentPiece());
+			peer.setCurrentPiece(null);
+		}
 	}
 
 }
