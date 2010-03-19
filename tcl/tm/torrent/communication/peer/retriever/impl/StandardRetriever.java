@@ -9,7 +9,7 @@ import tcl.tm.torrent.communication.peer.sender.PeerSender;
 import tcl.tm.torrent.communication.peer.retriever.PeerRetriever;
 
 public class StandardRetriever implements PeerRetriever {
-	
+
 	private Peer peer;
 	private PeerSender sender;
 	private CommunicationManager cm;
@@ -17,7 +17,8 @@ public class StandardRetriever implements PeerRetriever {
 	private Object chokeLock;
 	private Object pieceLock;
 	private boolean strikeOne;
-		
+	private int piecesCompleted;
+
 	public StandardRetriever(Peer peer, PeerSender sender, CommunicationManager cm, StatsInfo si, Object chokeLock, Object pieceLock) {
 		this.peer = peer;
 		this.sender = sender;
@@ -26,8 +27,9 @@ public class StandardRetriever implements PeerRetriever {
 		this.chokeLock = chokeLock;
 		this.pieceLock = pieceLock;
 		this.strikeOne = false;
+		this.piecesCompleted = 0;
 	}
-	
+
 	public void run() {
 		while(peer.isRunning()) {
 			chokeWait();
@@ -43,7 +45,7 @@ public class StandardRetriever implements PeerRetriever {
 					for(int block : needed) {
 						int id = currentPiece.getPieceId();
 						int offset = currentPiece.getBlockSize() * block;
-						int length = (block == currentPiece.getBlockCount()-1) ? currentPiece.getFinalBlockSize() 
+						int length = (block == currentPiece.getBlockCount()-1) ? currentPiece.getFinalBlockSize()
 																					: currentPiece.getBlockSize();
 						sender.issueRequest(id,offset,length);
 					}
@@ -54,7 +56,7 @@ public class StandardRetriever implements PeerRetriever {
 							pieceLock.wait(15000);
 						} catch(InterruptedException e) {}
 					}
-				}							
+				}
 			}
 		}
 		if(peer.getCurrentPiece() != null) {
@@ -62,13 +64,15 @@ public class StandardRetriever implements PeerRetriever {
 			peer.setCurrentPiece(null);
 		}
 	}
-	
+
 	private void chokeWait() {
 		synchronized(chokeLock) {
 			while(peer.getChoked()) {
 				try {
 					if(peer.getCurrentPiece() != null) {
-						cm.returnPiece(peer.getCurrentPiece());
+						if(cm.returnPiece(peer.getCurrentPiece())) {
+							piecesCompleted += 1;
+						}
 						peer.setCurrentPiece(null);
 					}
 					chokeLock.wait(300000);
@@ -79,7 +83,7 @@ public class StandardRetriever implements PeerRetriever {
 			}
 		}
 	}
-	
+
 	private void pieceWait() {
 		try {
 			synchronized(pieceLock) {
@@ -90,10 +94,10 @@ public class StandardRetriever implements PeerRetriever {
 			}
 		} catch(InterruptedException e) {}
 	}
-	
+
 	private void updateCurrentPiece() {
 		if(peer.getCurrentPiece() == null) {
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield()));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
 		} else if(peer.getCurrentPiece().isComplete()) {
 			boolean valid = cm.returnPiece(peer.getCurrentPiece());
 			if(!valid) {
@@ -102,9 +106,11 @@ public class StandardRetriever implements PeerRetriever {
 				} else {
 					strikeOne = true;
 				}
+			} else {
+				piecesCompleted += 1;
 			}
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield()));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
 		}
-	} 
-	
+	}
+
 }

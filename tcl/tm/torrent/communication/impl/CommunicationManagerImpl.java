@@ -7,6 +7,10 @@ import java.util.Hashtable;
 
 import tcl.tm.torrent.Torrent;
 import tcl.tm.torrent.communication.CommunicationManager;
+import tcl.tm.torrent.communication.registry.PeerRegistry;
+import tcl.tm.torrent.communication.registry.PieceRegistry;
+import tcl.tm.torrent.communication.registry.impl.PeerRegistryImpl;
+import tcl.tm.torrent.communication.registry.impl.PieceRegistryImpl;
 import tcl.tm.torrent.communication.peer.Peer;
 import tcl.tm.torrent.communication.peer.impl.StandardPeer;
 import tcl.tm.torrent.communication.peer.impl.FastPeerImpl;
@@ -144,7 +148,7 @@ public class CommunicationManagerImpl implements CommunicationManager {
 	 * @return A piece which can be downloaded by the Peer, given the bitfield they have provided.
 	 **/
 	public Piece assignPiece(boolean[] bitfield, int piecesCompleted) {
-		return pieceRegistry.assignPiece(bitfield, piecesCompleted);
+		return pieceRegistry.requestPiece(bitfield, piecesCompleted);
 	}
 
 	/**

@@ -29,18 +29,18 @@ import java.io.InputStream;
  * Handshake should have been taken care of by this point.
  * In short, this class should not need to do anything to establish the connection.
  * From that point on, however, it should be the sole interactor with the peer on this connection.
- * 
+ *
  * @author Wayne Rowcliffe
  **/
 public class StandardPeer implements Peer {
-	
+
 	private String name;
-	
+
 	private boolean peerInterested;
 	private boolean peerChoking;
 	private boolean amInterested;
 	private boolean amChoking;
-	
+
 	private Socket peerConnection;
 	private InputStream peerInput;
 	private OutputStream peerOutput;
@@ -53,28 +53,28 @@ public class StandardPeer implements Peer {
 	private boolean[] peerBitfield;
 
 	private boolean running;
-	
+
 	private Piece currentPiece;
-	
+
 	private Object chokeLock;
 	private Object pieceLock;
 	private Object runLock;
-	
+
 	private PeerListener peerListener;
 	private PeerSender peerSender;
 	private PeerRetriever pieceRetriever;
 
 	/**
 	 * Creates a StandardPeer for the given Torrent using the given Socket
-	 * 
+	 *
 	 * @param torrent The Torrent this Peer is sharing / downloading.
 	 * @param peerConnection The Socket representing the connection to this Peer.
 	 **/
 	public StandardPeer(Torrent torrent, Socket peerConnection) {
-		
+
 		this.peerConnection = peerConnection;
 		this.name = peerConnection.getInetAddress().toString();
-		
+
 		try{
 			this.peerInput = peerConnection.getInputStream();
 			this.peerOutput = peerConnection.getOutputStream();
@@ -88,25 +88,25 @@ public class StandardPeer implements Peer {
 		this.si = torrent.getInformationManager().getStatsInfo();
 
 		this.peerBitfield = new boolean[ti.getPieceCount()];
-		
+
 		this.chokeLock = new Object();
 		this.pieceLock = new Object();
 		this.runLock = new Object();
-		
+
 		this.peerSender = new StandardSender(this, fam, cm, peerOutput);
 		this.peerListener = new PeerListenerImpl(this, peerSender, peerInput);
 		this.pieceRetriever = new StandardRetriever(this, peerSender, cm, si, chokeLock, pieceLock);
-		
+
 		this.running = true;
-		
+
 		this.amChoking = true;
 		this.peerChoking = true;
-		
-				
+
+
 		new Thread(peerListener,"Peer Listener: " + name).start();
 		new Thread(peerSender,"Peer Sender: " + name).start();
-		new Thread(pieceRetriever, "Piece Retriever: " + name).start(); 
-		
+		new Thread(pieceRetriever, "Piece Retriever: " + name).start();
+
 		peerSender.sendBitfield();
 		peerSender.issueUnchoke();
 	}
@@ -122,11 +122,11 @@ public class StandardPeer implements Peer {
 		try{ peerOutput.close(); } catch(IOException e) {}
 		try{ peerConnection.close(); } catch(IOException e) {}
 		cm.removePeer(name);
-		
+
 		peerSender.issueKeepAlive();
-		
+
 		setChoked(false);
-		
+
 		synchronized(pieceLock) {
 			pieceLock.notifyAll();
 		}
@@ -134,34 +134,34 @@ public class StandardPeer implements Peer {
 
 	/**
 	 * Whether or not this Peer connection is running
-	 * 
+	 *
 	 * @return True if this is an active connection, else false.
 	 **/
 	public boolean isRunning() {
 		synchronized(runLock) {
 			return running;
 		}
-	}		
-	
+	}
+
 	public void setInterested(boolean interested) {
 		peerInterested = interested;
-	
+
 	}
-	
+
 	public boolean getInterested() {
 		return peerInterested;
-		
+
 	}
-	
+
 	public void setAmInterested(boolean interested) {
 		amInterested = interested;
 	}
-	
+
 	public boolean getAmInterested() {
 		return amInterested;
-		
+
 	}
-	
+
 	public void setChoked(boolean choked) {
 		synchronized(chokeLock) {
 			peerChoking = choked;
@@ -170,26 +170,27 @@ public class StandardPeer implements Peer {
 			}
 		}
 	}
-		
+
 	public boolean getChoked() {
 		synchronized(chokeLock) {
 			return peerChoking;
 		}
 	}
-	
+
 	public void setAmChoking(boolean choking) {
 		amChoking = choking;
 	}
-	
+
 	public boolean getAmChoking() {
 		return amChoking;
 	}
-	
+
 	public boolean[] getBitfield() {
 		return peerBitfield;
 	}
-	
+
 	public void bitfieldUpdated() {
+		System.out.println("Updating Bitfield");
 		cm.peerBitfield(peerBitfield);
 		if(!amInterested) {
 			if(cm.peerInteresting(peerBitfield)) {
@@ -197,17 +198,17 @@ public class StandardPeer implements Peer {
 			}
 		}
 	}
-	
+
 	public void hasPiece(int id) {
 		if(id > 0 && id < peerBitfield.length) {
 			peerBitfield[id] = true;
 		}
 	}
-	
+
 	public Piece getCurrentPiece() {
 		return currentPiece;
 	}
-	
+
 	public void setCurrentPiece(Piece piece) {
 		currentPiece = piece;
 	}
@@ -219,7 +220,7 @@ public class StandardPeer implements Peer {
 			}
 		}
 	}
-	
+
 	public void issueHave(int id) {
 		peerSender.issueHave(id);
 	}

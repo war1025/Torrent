@@ -1,7 +1,13 @@
 package tcl.tm.torrent.communication.registry.impl;
 
 import tcl.tm.torrent.communication.registry.PieceRegistry;
-import tcl.tm.torrent.communication.registry.PieceRequestFuture;
+import tcl.tm.torrent.communication.registry.PeerRegistry;
+
+import tcl.tm.torrent.communication.util.Piece;
+
+import tcl.tm.torrent.Torrent;
+
+import tcl.tm.torrent.info.TorrentInfo;
 
 import tcl.tm.torrent.file.FileAccessManager;
 import tcl.tm.torrent.file.FileAccessFuture;
@@ -22,6 +28,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 	private BlockingQueue<Piece> piecePool;
 
 	private boolean running;
+	private Object runLock;
 
 	private Object lock;
 
@@ -32,30 +39,52 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 	private FileAccessManager fam;
 	private TorrentInfo ti;
+	private PeerRegistry peerRegistry;
 
 	public PieceRegistryImpl(Torrent torrent, PeerRegistry peerRegistry, Piece template, int poolSize) {
 		this.piecePool = new LinkedBlockingQueue<Piece>();
-		for(int i = 0; i < poolSize; i++) {
-			piecePool.push(template.newInstance());
+		try {
+			for(int i = 0; i < poolSize; i++) {
+				System.out.println("Added new Piece to pool");
+				piecePool.put(template.newInstance());
+			}
+		} catch(InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		this.pieceQueue = new PriorityBlockingQueue<PieceRequest>();
 		this.fam = torrent.getFileAccessManager();
 		this.ti = torrent.getInformationManager().getTorrentInfo();
+		this.peerRegistry = peerRegistry;
+
+		this.inProgress = new boolean[torrent.getInformationManager().getTorrentInfo().getPieceCount()];
+		this.multiBitField = new int[inProgress.length];
+		getPreviousState();
+
+		this.endgame = false;
 
 		this.running = true;
+		this.runLock = new Object();
+
+		new Thread(new PieceRegistrar(),"PieceRegistry : " + torrent.getInformationManager().getTorrentInfo().getTorrentName()).start();
 
 	}
 
 	private class PieceRegistrar implements Runnable {
 
 		public void run() {
-			while(running) {
-				PieceRequest request = pieceQueue.take();
+			while(isRunning()) {
+				PieceRequest request = null;
+				try {
+					request = pieceQueue.take();
+				} catch(InterruptedException e) {
+					e.printStackTrace();
+				}
+				if(request.getBitfield() != null) {
+					Piece piece = assignPiece(request.getBitfield());
 
-				Piece piece = assignPiece(request.getBitfield());
-
-				request.setPiece(piece);
+					request.setPiece(piece);
+				}
 
 				request.validate();
 			}
@@ -117,15 +146,25 @@ public class PieceRegistryImpl implements PieceRegistry {
 		}
 	}
 
+	private boolean isRunning() {
+		synchronized(runLock) {
+			return running;
+		}
+	}
+
 	/**
 	 * Closes this PieceRegistry
 	 **/
 	public void close() {
-		running = false;
+		synchronized(runLock) {
+			running = false;
+		}
+		pieceQueue.put(new PieceRequest(null,0));
 	}
 
 	public Piece requestPiece(boolean[] bitfield, int piecesCompleted) {
-		if(running) {
+		System.out.println("Requesting piece");
+		if(isRunning()) {
 			PieceRequest p = new PieceRequest(bitfield, piecesCompleted);
 			pieceQueue.put(p);
 			return p.getPiece();
@@ -135,8 +174,8 @@ public class PieceRegistryImpl implements PieceRegistry {
 	}
 
 	private Piece assignPiece(boolean[] bitfield) {
+		int lowestId = -1;
 		synchronized(lock) {
-			int lowestId = -1;
 			int lowestFrequency = Integer.MAX_VALUE;
 
 			for(int i = 0; i < bitfield.length; i++) {
@@ -154,7 +193,13 @@ public class PieceRegistryImpl implements PieceRegistry {
 				lowestId = attemptEndgame(bitfield);
 			}
 		}
-		return (lowestId >= 0) ? piecePool.take().reset(lowestId) : null;
+		Piece ret = null;
+		try {
+			ret = (lowestId >= 0) ? piecePool.take().reset(lowestId) : null;
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		return ret;
 	}
 
 	public boolean returnPiece(Piece p) {
@@ -169,7 +214,11 @@ public class PieceRegistryImpl implements PieceRegistry {
 			}
 			inProgress[p.getPieceId()] = false;
 		}
-		piecePool.put(p);
+		try {
+			piecePool.put(p);
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
 		return success;
 	}
 
@@ -183,6 +232,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 	public void peerBitfield(boolean[] bitfield) {
 		synchronized(lock) {
+			System.out.println("Piece Registry Updating Bitfield");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && (multiBitField[i] >= 0)) {
 					multiBitField[i] += 1;
@@ -194,6 +244,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 	public boolean peerInteresting(boolean[] bitfield) {
 		boolean interesting = false;
 		synchronized(lock) {
+			System.out.println("Piece Registry Deciding Interesting");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && !(inProgress[i]) && multiBitField[i] > 0) {
 					interesting = true;
@@ -206,6 +257,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 	public void removeBitfield(boolean[] bitfield) {
 		synchronized(lock) {
+			System.out.println("Piece Registry Removing Bitfield");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && (multiBitField[i] > 0)) {
 					multiBitField[i] -= 1;

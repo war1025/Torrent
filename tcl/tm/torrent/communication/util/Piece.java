@@ -1,5 +1,7 @@
 package tcl.tm.torrent.communication.util;
 
+import tcl.tm.torrent.Torrent;
+
 /**
  * Represents a Piece from a BitTorrent download.
  * A Piece encapsulates the data within the piece as well
@@ -42,8 +44,8 @@ public class Piece {
 		this.lock = null;
 
 		this.pieceCount = torrent.getInformationManager().getTorrentInfo().getPieceCount();
-		this.standardPieceSize = torrent.getInformationManager().getTorrentInfo().getPieceSize();
-		this.finalPieceSize = torrent.getInformationManager().getTorrentInfo().getFinalPieceSize();
+		this.standardPieceSize = torrent.getInformationManager().getTorrentInfo().getPieceLength();
+		this.finalPieceSize = torrent.getInformationManager().getTorrentInfo().getFinalPieceLength();
 		this.monitor = monitor;
 	}
 
@@ -68,7 +70,7 @@ public class Piece {
 			throw new IndexOutOfBoundsException("PieceId is out of bounds: " + pieceId);
 		}
 		this.pieceId = pieceId;
-		pieceSize = (pieceId < pieceCount -1) ? standardPieceSize : finalPieceSize;
+		int pieceSize = (pieceId < pieceCount -1) ? standardPieceSize : finalPieceSize;
 		if(pieceSize % blockSize == 0) {
 			this.finalBlockSize = blockSize;
 			this.block = new boolean[pieceSize/blockSize];

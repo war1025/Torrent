@@ -10,7 +10,7 @@ import tcl.tm.torrent.communication.peer.sender.PeerSender;
 import tcl.tm.torrent.communication.peer.retriever.PeerRetriever;
 
 public class FastRetriever implements PeerRetriever {
-	
+
 	private FastPeer peer;
 	private PeerSender sender;
 	private CommunicationManager cm;
@@ -18,7 +18,8 @@ public class FastRetriever implements PeerRetriever {
 	private Object chokeLock;
 	private Object pieceLock;
 	private boolean strikeOne;
-		
+	private int piecesCompleted;
+
 	public FastRetriever(FastPeer peer, PeerSender sender, CommunicationManager cm, StatsInfo si, Object chokeLock, Object pieceLock) {
 		this.peer = peer;
 		this.sender = sender;
@@ -27,10 +28,12 @@ public class FastRetriever implements PeerRetriever {
 		this.chokeLock = chokeLock;
 		this.pieceLock = pieceLock;
 		this.strikeOne = false;
+		this.piecesCompleted = 0;
 	}
-	
+
 	public void run() {
 		while(peer.isRunning()) {
+			System.out.println("Inside Retriever Run Block");
 			chokeWait();
 			if(peer.isRunning()) {
 				updateCurrentPiece();
@@ -44,7 +47,7 @@ public class FastRetriever implements PeerRetriever {
 					for(int block : needed) {
 						int id = currentPiece.getPieceId();
 						int offset = currentPiece.getBlockSize() * block;
-						int length = (block == currentPiece.getBlockCount()-1) ? currentPiece.getFinalBlockSize() 
+						int length = (block == currentPiece.getBlockCount()-1) ? currentPiece.getFinalBlockSize()
 																					: currentPiece.getBlockSize();
 						sender.issueRequest(id,offset,length);
 						synchronized(peer.getFastLock()) {
@@ -58,7 +61,7 @@ public class FastRetriever implements PeerRetriever {
 							pieceLock.wait(15000);
 						} catch(InterruptedException e) {}
 					}
-				}							
+				}
 			}
 		}
 		if(peer.getCurrentPiece() != null) {
@@ -66,13 +69,15 @@ public class FastRetriever implements PeerRetriever {
 			peer.setCurrentPiece(null);
 		}
 	}
-	
+
 	private void chokeWait() {
 		synchronized(chokeLock) {
 			while(peer.getChoked()) {
 				try {
 					if(peer.getCurrentPiece() != null) {
-						cm.returnPiece(peer.getCurrentPiece());
+						if(cm.returnPiece(peer.getCurrentPiece())) {
+							piecesCompleted += 1;
+						}
 						peer.setCurrentPiece(null);
 					}
 					chokeLock.wait(300000);
@@ -83,7 +88,7 @@ public class FastRetriever implements PeerRetriever {
 			}
 		}
 	}
-	
+
 	private void pieceWait() {
 		try {
 			synchronized(pieceLock) {
@@ -94,10 +99,10 @@ public class FastRetriever implements PeerRetriever {
 			}
 		} catch(InterruptedException e) {}
 	}
-	
+
 	private void updateCurrentPiece() {
 		if(peer.getCurrentPiece() == null) {
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield()));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
 		} else if(peer.getCurrentPiece().isComplete()) {
 			boolean valid = cm.returnPiece(peer.getCurrentPiece());
 			if(!valid) {
@@ -106,9 +111,11 @@ public class FastRetriever implements PeerRetriever {
 				} else {
 					strikeOne = true;
 				}
+			} else {
+				piecesCompleted += 1;
 			}
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield()));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
 		}
-	} 
-	
+	}
+
 }

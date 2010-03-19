@@ -41,8 +41,10 @@ public class PeerRegistryImpl implements PeerRegistry {
 	 * @param reserved The reserved bytes from the handshake, used to determine what sort of Peer we have.
 	 **/
 	public void addPeer(Socket peer, byte[] reserved) {
+		System.out.println("Might add Peer");
 		synchronized(peerLock) {
 			if(running && !peers.containsKey(peer.getInetAddress().toString()) && !(peer.getInetAddress().equals(peer.getLocalAddress()))) {
+				System.out.println("Going to add Peer");
 				if((reserved[7] & (0x04)) == 4) {
 					peers.put(peer.getInetAddress().toString(),new FastPeerImpl(torrent,peer));
 				} else {
@@ -58,6 +60,7 @@ public class PeerRegistryImpl implements PeerRegistry {
 	 * @param peer The peer to remove from this CommunicationManager
 	 **/
 	public void removePeer(String peer) {
+		System.out.println("Removing peer");
 		synchronized(peerLock) {
 			peers.remove(peer);
 		}
