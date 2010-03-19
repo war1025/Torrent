@@ -25,6 +25,7 @@ public class ThroughputMonitor {
 
 	public void close() {
 		synchronized(runLock) {
+			System.out.println("Closing Throughput Monitor");
 			running = false;
 			runLock.notifyAll();
 		}

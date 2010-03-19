@@ -21,14 +21,14 @@ import tcl.tm.torrent.info.impl.InformationManagerImpl;
  * Starting and stopping will be accomplished by simply creating or disposing of the relevent Torrent object.
  * Relocate and Remove will be functionality provided in the Torrent implementation. These methods should either
  * close the Torrent when called, or strongly suggest that close() be called directly afterwards.
- * 
+ *
  * Torrents also need the ability to add new Peers which are connected via the TorrentManager's ConnectionManager.
- * 
+ *
  * @author Wayne Rowcliffe
  * @author Anthony Milosch
  **/
 public class TorrentImpl implements Torrent {
-	
+
 	private InformationManager im;
 	private FileAccessManager fam;
 	private StatusLoader sl;
@@ -37,9 +37,9 @@ public class TorrentImpl implements Torrent {
 	private String statusLocation;
 
 	/**
-	 * This is the constructor, you need to give it the filepath and the 
+	 * This is the constructor, you need to give it the filepath and the
 	 * directory where you want the file to be storred.
-	 * 
+	 *
 	 * @param filePath The filepath to the .torrent file
 	 * @param baseDirectory The base Directory of where the torrent information will
 	 * be held.
@@ -53,29 +53,33 @@ public class TorrentImpl implements Torrent {
 		cm = new CommunicationManagerImpl(this);
 		directoryFolder = baseDirectory + im.getTorrentInfo().getTorrentName();
 		statusLocation = baseDirectory + "." + im.getTorrentInfo().getEscapedInfoHash();
-		
+
 	}
-	
+
 	/**
 	 * Closes all subsections of the Torrent, cleaning up any loose ends, closing any connections, and killing additional threads.
 	 **/
 	public void close() {
 		try {
+			System.out.println("Closing Communication Manager");
 			cm.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 		try {
+			System.out.println("Closing File Access Manager");
 			fam.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 		try {
+			System.out.println("Closing Status Loader");
 			sl.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 		try {
+			System.out.println("Closing Information Manager");
 			im.close();
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -83,18 +87,18 @@ public class TorrentImpl implements Torrent {
 	}
 
 	/**
-	 * Adds a Peer to this Torrent. Meaning that the peer on the other side 
+	 * Adds a Peer to this Torrent. Meaning that the peer on the other side
 	 * of the Socket is interested in downloading / sharing this Torrent.
-	 * 
+	 *
 	 * @param peer The Socket representing the connection to an interested peer.
 	 **/
 	public void addPeer(Socket peer, byte[] reserved) {
-		cm.addPeer(peer, reserved);		
+		cm.addPeer(peer, reserved);
 	}
 
 	/**
 	 * Returns the CommunicationManager for this Torrent
-	 * 
+	 *
 	 * @return The CommunicationManager for this Torrent
 	 **/
 	public CommunicationManager getCommunicationManager() {
@@ -103,7 +107,7 @@ public class TorrentImpl implements Torrent {
 
 	/**
 	 * Returns the FileAccessManager for this Torrent
-	 * 
+	 *
 	 * @return The FileAccessManager for this Torrent
 	 **/
 	public FileAccessManager getFileAccessManager() {
@@ -112,7 +116,7 @@ public class TorrentImpl implements Torrent {
 
 	/**
 	 * Returns the InformationManager for this Torrent
-	 * 
+	 *
 	 * @return The InformationManager for this Torrent
 	 **/
 	public InformationManager getInformationManager() {
@@ -122,10 +126,10 @@ public class TorrentImpl implements Torrent {
 	/**
 	 * This method will relocate the downloaded torrent file, after the relocate is complete
 	 * the backend will lose track of it, and completly disregard it.
-	 * 
+	 *
 	 * @param newFilePath the new filepath where the file will be located
-	 * 
-	 * @return true if the relocate was sucessful, false if the file you are trying 
+	 *
+	 * @return true if the relocate was sucessful, false if the file you are trying
 	 * to download cannot be relocated
 	 **/
 	public boolean relocate(String newFilePath) {
@@ -139,16 +143,16 @@ public class TorrentImpl implements Torrent {
 		File inFile = new File(directoryFolder);
 		File outFile = new File(newFilePath + im.getTorrentInfo().getTorrentName());
 		success = inFile.renameTo(outFile);
-		
+
 		File status = new File(statusLocation);
 		success &= status.delete();
 		return success;
 	}
 
 	/**
-	 * This method will remove a file from the queue/ stop downloading and 
+	 * This method will remove a file from the queue/ stop downloading and
 	 * delete, or delete if already downloaded
-	 * 
+	 *
 	 * @return true if sucessful false otherwise
 	 **/
 	public boolean remove() {
@@ -167,12 +171,12 @@ public class TorrentImpl implements Torrent {
 		success &= status.delete();
 		return success;
 	}
-	
+
 	/**
 	 * This function will go through and delete an entire directory recursively.
-	 * 
+	 *
 	 * @param base The base directory.
-	 * 
+	 *
 	 * @return true if it was sucessful
 	 */
 	private boolean recursiveDelete(File base) {
@@ -188,6 +192,6 @@ public class TorrentImpl implements Torrent {
 		success &= base.delete();
 		return success;
 	}
-	
-	
+
+
 }

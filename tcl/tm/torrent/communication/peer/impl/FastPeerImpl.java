@@ -129,7 +129,6 @@ public class FastPeerImpl implements FastPeer {
 	 * Closes the connection with this Peer
 	 **/
 	public void close() {
-		System.out.println("Closing Fast Peer");
 		synchronized(runLock) {
 			running = false;
 		}
@@ -205,7 +204,6 @@ public class FastPeerImpl implements FastPeer {
 	}
 
 	public void bitfieldUpdated() {
-		System.out.println("Fast Peer Updating Bitfield");
 		cm.peerBitfield(peerBitfield);
 		if(!amInterested) {
 			if(cm.peerInteresting(peerBitfield)) {

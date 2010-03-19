@@ -165,6 +165,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 	}
 
 	public Piece requestPiece(boolean[] bitfield, int piecesCompleted) {
+		System.out.println("Requesting new Piece. Already Downloaded: " + piecesCompleted);
 		if(isRunning()) {
 			PieceRequest p = new PieceRequest(bitfield, piecesCompleted);
 			pieceQueue.put(p);

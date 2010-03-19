@@ -33,7 +33,6 @@ public class FastRetriever implements PeerRetriever {
 
 	public void run() {
 		while(peer.isRunning()) {
-			System.out.println("Inside Retriever Run Block");
 			chokeWait();
 			if(peer.isRunning()) {
 				updateCurrentPiece();

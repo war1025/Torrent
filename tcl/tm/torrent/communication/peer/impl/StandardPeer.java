@@ -190,7 +190,6 @@ public class StandardPeer implements Peer {
 	}
 
 	public void bitfieldUpdated() {
-		System.out.println("Updating Bitfield");
 		cm.peerBitfield(peerBitfield);
 		if(!amInterested) {
 			if(cm.peerInteresting(peerBitfield)) {
