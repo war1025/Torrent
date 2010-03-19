@@ -10,6 +10,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+/**
+ * The PieceRegistry tracks the pieces needed for the current torrent.
+ * It assigns pieces to peers for download and also handles saving
+ * completed pieces to file.
+ **/
 public class PieceRegistryImpl implements PieceRegistry {
 
 	private PriorityBlockingQueue<PieceRequest> pieceQueue;
@@ -17,6 +22,17 @@ public class PieceRegistryImpl implements PieceRegistry {
 	private BlockingQueue<Piece> piecePool;
 
 	private boolean running;
+
+	private Object lock;
+
+	private boolean[] inProgress;
+	private int[] multiBitField;
+
+	private Map<Integer,Piece> abandonedPieces;
+	private boolean endgame;
+
+	private FileAccessManager fam;
+	private TorrentInfo ti;
 
 	public PieceRegistryImpl(Piece template, int poolSize) {
 		piecePool = new LinkedBlockingQueue<Piece>();
@@ -35,7 +51,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 			while(running) {
 				PieceRequest request = pieceQueue.take();
 
-				assignPiece(request.getBitfield());
+				Piece piece = assignPiece(request.getBitfield());
 
 				request.setPiece(piece);
 
@@ -49,12 +65,11 @@ public class PieceRegistryImpl implements PieceRegistry {
 		}
 	}
 
-	public void start() {
-
-	}
-
+	/**
+	 * Closes this PieceRegistry
+	 **/
 	public void close() {
-
+		running = false;
 	}
 
 	public Piece requestPiece(boolean[] bitfield, int piecesCompleted) {
@@ -91,13 +106,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 			}
 			System.out.println("Abandoned Pieces Size : " + abandonedPieces.size());
 			if(lowestId >= 0 && assigned == null) {
-				int length = 0;
-				if(lowestId == bitfield.length -1) {
-					length = torrent.getInformationManager().getTorrentInfo().getFinalPieceLength();
-				} else {
-					length = torrent.getInformationManager().getTorrentInfo().getPieceLength();
-				}
-				assigned = new Piece(lowestId,16 * 1024,length, speed);
+				assigned = piecePool.take().reset(lowestId);
 			}
 			if(lowestId >= 0) {
 				inProgress[lowestId] = true;
@@ -114,7 +123,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 		boolean success = false;
 		synchronized(lock) {
 			if(p.isComplete()) {
-				success = torrent.getFileAccessManager().savePiece(p.getPieceId(),p.getData()).getSuccess();
+				success = fam.savePiece(p.getPieceId(),p.getData()).getSuccess();
 				System.out.println("Verifying Returned Piece: " + p.getPieceId() + " " + success);
 				if(success) {
 					multiBitField[p.getPieceId()] = -1;
@@ -123,8 +132,9 @@ public class PieceRegistryImpl implements PieceRegistry {
 					}
 				}
 			} else {
-				abandonedPieces.put(p.getPieceId(),p);
+				//abandonedPieces.put(p.getPieceId(),p);
 			}
+			piecePool.put(p);
 			inProgress[p.getPieceId()] = false;
 		}
 		return success;
@@ -175,7 +185,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 	 * Contacts the FileAccessManager to establish which pieces have been completed previously.
 	 **/
 	private void getPreviousState() {
-		byte[] state = torrent.getFileAccessManager().getBitfield().getData();
+		byte[] state = fam.getBitfield().getData();
 		for(int i = 0; i < state.length; i++) {
 			for(int j = 0; j < 8; j++) {
 				if((((state[i] >> (7-j)) & 1) == 1) && inProgress.length > (i*8 + j)) {
@@ -225,17 +235,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 				lowestFrequency = multiBitField[i];
 			}
 		}
-		if(lowestId >= 0) {
-			int length = 0;
-			if(lowestId == bitfield.length -1) {
-				length = torrent.getInformationManager().getTorrentInfo().getFinalPieceLength();
-			} else {
-				length = torrent.getInformationManager().getTorrentInfo().getPieceLength();
-			}
-			return new Piece(lowestId,16 * 1024,length, speed);
-		} else {
-			return null;
-		}
+		return (lowestId >= 0) ? piecePool.take().reset(lowestId) : null;
 	}
 
 }
