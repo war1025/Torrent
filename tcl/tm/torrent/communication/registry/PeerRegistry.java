@@ -29,6 +29,11 @@ public interface PeerRegistry {
 	public void close();
 
 	/**
+	 * The number of Peers we are currently connected to
+	 **/
+	public int getNumPeers();
+
+	/**
 	 * Notifies all current peers that we now have the given piece
 	 *
 	 * @param pieceId The id of the piece we now have

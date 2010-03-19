@@ -28,21 +28,23 @@ public class PieceRegistryImpl implements PieceRegistry {
 	private boolean[] inProgress;
 	private int[] multiBitField;
 
-	private Map<Integer,Piece> abandonedPieces;
 	private boolean endgame;
 
 	private FileAccessManager fam;
 	private TorrentInfo ti;
 
-	public PieceRegistryImpl(Piece template, int poolSize) {
-		piecePool = new LinkedBlockingQueue<Piece>();
+	public PieceRegistryImpl(Torrent torrent, PeerRegistry peerRegistry, Piece template, int poolSize) {
+		this.piecePool = new LinkedBlockingQueue<Piece>();
 		for(int i = 0; i < poolSize; i++) {
 			piecePool.push(template.newInstance());
 		}
 
-		pieceQueue = new PriorityBlockingQueue<PieceRequest>();
+		this.pieceQueue = new PriorityBlockingQueue<PieceRequest>();
+		this.fam = torrent.getFileAccessManager();
+		this.ti = torrent.getInformationManager().getTorrentInfo();
 
-		running = false;
+		this.running = true;
+
 	}
 
 	private class PieceRegistrar implements Runnable {
@@ -65,6 +67,56 @@ public class PieceRegistryImpl implements PieceRegistry {
 		}
 	}
 
+	private class PieceRequest implements Comparable<PieceRequest> {
+
+		private Piece piece;
+
+		private int piecesCompleted;
+		private boolean[] bitfield;
+
+		private boolean valid;
+		private Object validLock;
+
+		public PieceRequest(boolean[] bitfield, int piecesCompleted) {
+			this.bitfield = bitfield;
+			this.piecesCompleted = piecesCompleted;
+			this.validLock = new Object();
+			this.valid = false;
+		}
+
+		public void setPiece(Piece piece) {
+			this.piece = piece;
+		}
+
+		public boolean[] getBitfield() {
+			return bitfield;
+		}
+
+		public Piece getPiece() {
+			synchronized(validLock) {
+				while(!valid) {
+					try {
+						validLock.wait();
+					} catch(InterruptedException e) {}
+				}
+			}
+			return piece;
+		}
+
+		public void validate() {
+			synchronized(validLock) {
+				valid = true;
+				validLock.notifyAll();
+			}
+		}
+
+		public int compareTo(PieceRequest p) {
+			return (this.piecesCompleted > p.piecesCompleted) ? -1 :
+					(this.piecesCompleted < p.piecesCompleted) ? 1 :
+					0;
+		}
+	}
+
 	/**
 	 * Closes this PieceRegistry
 	 **/
@@ -83,40 +135,26 @@ public class PieceRegistryImpl implements PieceRegistry {
 	}
 
 	private Piece assignPiece(boolean[] bitfield) {
-		Piece assigned = null;
 		synchronized(lock) {
 			int lowestId = -1;
 			int lowestFrequency = Integer.MAX_VALUE;
-			boolean foundAbandoned = false;
-			for(int i : abandonedPieces.keySet()) {
-				if(bitfield[i]) {
+
+			for(int i = 0; i < bitfield.length; i++) {
+				if(bitfield[i] && (!inProgress[i]) && (multiBitField[i] > 0) && (multiBitField[i] < lowestFrequency)) {
 					lowestId = i;
-					assigned = abandonedPieces.remove(lowestId);
-					foundAbandoned = true;
-					break;
+					lowestFrequency = multiBitField[i];
 				}
 			}
-			if(!foundAbandoned) {
-				for(int i = 0; i < bitfield.length; i++) {
-					if(bitfield[i] && (!inProgress[i]) && (multiBitField[i] > 0) && (multiBitField[i] < lowestFrequency)) {
-						lowestId = i;
-						lowestFrequency = multiBitField[i];
-					}
-				}
-			}
-			System.out.println("Abandoned Pieces Size : " + abandonedPieces.size());
-			if(lowestId >= 0 && assigned == null) {
-				assigned = piecePool.take().reset(lowestId);
-			}
+
 			if(lowestId >= 0) {
 				inProgress[lowestId] = true;
 			} else if(!endgame) {
 				checkEndgame();
 			} else {
-				assigned = attemptEndgame(bitfield);
+				lowestId = attemptEndgame(bitfield);
 			}
 		}
-		return assigned;
+		return (lowestId >= 0) ? piecePool.take().reset(lowestId) : null;
 	}
 
 	public boolean returnPiece(Piece p) {
@@ -126,17 +164,12 @@ public class PieceRegistryImpl implements PieceRegistry {
 				success = fam.savePiece(p.getPieceId(),p.getData()).getSuccess();
 				System.out.println("Verifying Returned Piece: " + p.getPieceId() + " " + success);
 				if(success) {
-					multiBitField[p.getPieceId()] = -1;
-					for(Peer peer : peers.values()) {
-						peer.issueHave(p.getPieceId());
-					}
+					peerRegistry.notifyHave(p.getPieceId());
 				}
-			} else {
-				//abandonedPieces.put(p.getPieceId(),p);
 			}
-			piecePool.put(p);
 			inProgress[p.getPieceId()] = false;
 		}
+		piecePool.put(p);
 		return success;
 	}
 
@@ -225,7 +258,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 	 *
 	 * @return An endgame Piece to assign to the calling Peer.
 	 **/
-	private Piece attemptEndgame(boolean[] bitfield) {
+	private int attemptEndgame(boolean[] bitfield) {
 		int lowestId = -1;
 		int lowestFrequency = Integer.MAX_VALUE;
 		System.out.println("Attempting Endgame");
@@ -235,7 +268,7 @@ public class PieceRegistryImpl implements PieceRegistry {
 				lowestFrequency = multiBitField[i];
 			}
 		}
-		return (lowestId >= 0) ? piecePool.take().reset(lowestId) : null;
+		return lowestId;
 	}
 
 }
