@@ -102,7 +102,7 @@ public class StatCreator {
 	}
 	
 	private static String humanBytes(long bytes) {
-		String[] suffix = {"B","KB","MB","GB"};
+		String[] suffix = {"B","KiB","MiB","GiB"};
 		int pos = 0;
 		while(bytes > 1024) {
 			bytes /= 1024;
