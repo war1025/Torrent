@@ -137,7 +137,6 @@ public class ConnectionSeeker implements Runnable, Closeable {
 				try {
 					socket.close();
 				} catch(IOException io) {
-					io.printStackTrace();
 				}
 				return;
 			}
@@ -149,7 +148,6 @@ public class ConnectionSeeker implements Runnable, Closeable {
 				try{
 					socket.close();
 				} catch(IOException e) {
-					e.printStackTrace();
 				}
 			}
 		}
@@ -187,7 +185,6 @@ public class ConnectionSeeker implements Runnable, Closeable {
 				System.arraycopy(peerHandShake,20,reserved,0,8);
 				return true;
 			} catch(IOException e) {
-				e.printStackTrace();
 			}
 			return false;
 		}
