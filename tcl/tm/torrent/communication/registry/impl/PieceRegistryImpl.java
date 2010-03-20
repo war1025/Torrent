@@ -45,7 +45,6 @@ public class PieceRegistryImpl implements PieceRegistry {
 		this.piecePool = new LinkedBlockingQueue<Piece>();
 		try {
 			for(int i = 0; i < poolSize; i++) {
-				System.out.println("Added new Piece to pool");
 				piecePool.put(template.newInstance());
 			}
 		} catch(InterruptedException e) {
@@ -235,7 +234,6 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 	public void peerBitfield(boolean[] bitfield) {
 		synchronized(lock) {
-			System.out.println("Piece Registry Updating Bitfield");
 			for(int i = 0; i < bitfield.length; i++) {
 				if(bitfield[i] && (multiBitField[i] >= 0)) {
 					multiBitField[i] += 1;
