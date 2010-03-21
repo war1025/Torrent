@@ -61,7 +61,8 @@ public class UIManagerImpl implements UIManager
 		while(isRunning()) {
 			synchronized(lock) {
 				try {
-					lock.wait();
+					lock.wait(420000);
+					System.gc();
 				} catch(InterruptedException e) {
 					e.printStackTrace();
 				}
