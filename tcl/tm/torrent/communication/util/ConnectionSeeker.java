@@ -142,6 +142,10 @@ public class ConnectionSeeker implements Runnable, Closeable {
 			}
 			boolean correct = handShake();
 			if(correct) {
+				try {
+					socket.setSoTimeout(180000);
+				} catch(IOException io) {
+				}
 				torrent.addPeer(socket, reserved);
 				//System.out.println("Adding Peer: " + hash);
 			} else {
