@@ -101,15 +101,15 @@ public class PieceRegistryImpl implements PieceRegistry {
 
 		private Piece piece;
 
-		private int piecesCompleted;
+		private long downloadTime;
 		private boolean[] bitfield;
 
 		private boolean valid;
 		private Object validLock;
 
-		public PieceRequest(boolean[] bitfield, int piecesCompleted) {
+		public PieceRequest(boolean[] bitfield, long downloadTime) {
 			this.bitfield = bitfield;
-			this.piecesCompleted = piecesCompleted;
+			this.downloadTime = downloadTime;
 			this.validLock = new Object();
 			this.valid = false;
 		}
@@ -141,8 +141,8 @@ public class PieceRegistryImpl implements PieceRegistry {
 		}
 
 		public int compareTo(PieceRequest p) {
-			return (this.piecesCompleted > p.piecesCompleted) ? -1 :
-					(this.piecesCompleted < p.piecesCompleted) ? 1 :
+			return (this.downloadTime < p.downloadTime) ? -1 :
+					(this.downloadTime > p.downloadTime) ? 1 :
 					0;
 		}
 	}
@@ -163,10 +163,10 @@ public class PieceRegistryImpl implements PieceRegistry {
 		pieceQueue.put(new PieceRequest(null,0));
 	}
 
-	public Piece requestPiece(boolean[] bitfield, int piecesCompleted) {
-		System.out.println("Requesting new Piece. Already Downloaded: " + piecesCompleted);
+	public Piece requestPiece(boolean[] bitfield, long downloadTime) {
+		System.out.println("Requesting new Piece. Time for last download: " + downloadTime);
 		if(isRunning()) {
-			PieceRequest p = new PieceRequest(bitfield, piecesCompleted);
+			PieceRequest p = new PieceRequest(bitfield, downloadTime);
 			pieceQueue.put(p);
 			return p.getPiece();
 		} else {

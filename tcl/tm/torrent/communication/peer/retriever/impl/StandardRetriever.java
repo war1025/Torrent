@@ -17,7 +17,7 @@ public class StandardRetriever implements PeerRetriever {
 	private Object chokeLock;
 	private Object pieceLock;
 	private boolean strikeOne;
-	private int piecesCompleted;
+	private long completeTime;
 
 	public StandardRetriever(Peer peer, PeerSender sender, CommunicationManager cm, StatsInfo si, Object chokeLock, Object pieceLock) {
 		this.peer = peer;
@@ -27,7 +27,7 @@ public class StandardRetriever implements PeerRetriever {
 		this.chokeLock = chokeLock;
 		this.pieceLock = pieceLock;
 		this.strikeOne = false;
-		this.piecesCompleted = 0;
+		this.completeTime = 10000L;
 	}
 
 	public void run() {
@@ -70,9 +70,7 @@ public class StandardRetriever implements PeerRetriever {
 			while(peer.getChoked()) {
 				try {
 					if(peer.getCurrentPiece() != null) {
-						if(cm.returnPiece(peer.getCurrentPiece())) {
-							piecesCompleted += 1;
-						}
+						cm.returnPiece(peer.getCurrentPiece());
 						peer.setCurrentPiece(null);
 					}
 					chokeLock.wait(300000);
@@ -97,8 +95,9 @@ public class StandardRetriever implements PeerRetriever {
 
 	private void updateCurrentPiece() {
 		if(peer.getCurrentPiece() == null) {
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),completeTime));
 		} else if(peer.getCurrentPiece().isComplete()) {
+			completeTime = peer.getCurrentPiece().completeTime();
 			boolean valid = cm.returnPiece(peer.getCurrentPiece());
 			if(!valid) {
 				if(strikeOne) {
@@ -106,10 +105,8 @@ public class StandardRetriever implements PeerRetriever {
 				} else {
 					strikeOne = true;
 				}
-			} else {
-				piecesCompleted += 1;
 			}
-			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),piecesCompleted));
+			peer.setCurrentPiece(cm.assignPiece(peer.getBitfield(),completeTime));
 		}
 		if(!peer.isRunning() && peer.getCurrentPiece() != null) {
 			cm.returnPiece(peer.getCurrentPiece());

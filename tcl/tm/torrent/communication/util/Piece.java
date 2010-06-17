@@ -25,6 +25,9 @@ public class Piece {
 	private int standardPieceSize;
 	private int finalPieceSize;
 
+	private long startTime;
+	private long endTime;
+
 	private Object lock;
 	private ThroughputMonitor monitor;
 
@@ -82,6 +85,10 @@ public class Piece {
 			System.out.println("Creating a new data array of length " + pieceSize);
 			data = new byte[pieceSize];
 		}
+
+		startTime = System.currentTimeMillis();
+		endTime = 0;
+
 		return this;
 	}
 
@@ -96,7 +103,7 @@ public class Piece {
 	 * @return If the block was saved successfully
 	 **/
 	public boolean saveBlock(int number, byte[] data, int offset, int length) {
-		boolean success = false;
+		boolean success = true;
 		monitor.dataReceived(length);
 		synchronized(lock) {
 			if(number < 0 || number >= block.length) {
@@ -104,6 +111,9 @@ public class Piece {
 			} else if(!block[number] && ((length == blockSize) || ((number == block.length -1) && (length == finalBlockSize)))) {
 				System.arraycopy(data,offset,this.data,number * blockSize,length);
 				block[number] = true;
+				if(isComplete()) {
+					endTime = System.currentTimeMillis();
+				}
 			}
 		}
 		return success;
@@ -191,6 +201,20 @@ public class Piece {
 	 **/
 	public byte[] getData() {
 		return data;
+	}
+
+	/**
+	 * The time it took to complete this piece download.
+	 *
+	 * @return The time it took to complete this piece download, or a large number if not yet complete
+	 **/
+	public long completeTime() {
+		synchronized(lock) {
+			if(endTime > 0) {
+				return endTime - startTime;
+			}
+			return startTime;
+		}
 	}
 }
 

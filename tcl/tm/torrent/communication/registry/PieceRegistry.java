@@ -18,11 +18,11 @@ public interface PieceRegistry {
 	 * Called by a Peer to request a piece for download.
 	 *
 	 * @param bitfield The bitfield of pieces the Peer has available.
-	 * @param piecesCompleted The number of pieces the Peer has successfully downloaded.
+	 * @param completeTime The amount of time the Peer took to download the last piece.
 	 *
 	 * @return The next piece the Peer should attempt to download, or null if nothing acceptable was found.
 	 **/
-	public Piece requestPiece(boolean[] bitfield, int piecesCompleted);
+	public Piece requestPiece(boolean[] bitfield, long completeTime);
 
 	/**
 	 * Called by a Peer to return a downloaded piece

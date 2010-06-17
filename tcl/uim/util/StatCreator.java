@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class StatCreator {
-	
+
 	public static List<Map<String,String>> createDBusStats(TorrentManager tm) {
 		String[] torrents = tm.getTorrentsAvailable();
 		List<Map<String,String>> stats = new ArrayList<Map<String,String>>();
@@ -46,12 +46,12 @@ public class StatCreator {
 		}
 		return stats;
 	}
-				
-	
+
+
 	private static String getName(Torrent t) {
 		return t.getInformationManager().getTorrentInfo().getTorrentName();
 	}
-	
+
 	private static String getEta(Torrent t) {
 		int speed = t.getInformationManager().getStatsInfo().getSpeed();
 		long bytesLeft = t.getInformationManager().getStatsInfo().getNumBytesLeft();
@@ -69,45 +69,47 @@ public class StatCreator {
 		}
 		return eta;
 	}
-	
+
 	private static String getSpeed(Torrent t) {
 		long total = t.getInformationManager().getStatsInfo().getSpeed();
 		return humanBytes(total) + "/s";
 	}
-	
+
 	private static String getProgress(Torrent t) {
 		StatsInfo si = t.getInformationManager().getStatsInfo();
 		double progress = (100.0 * si.getNumPiecesDownloaded()) / si.getNumPieces();
 		return String.format("%.2f%%",progress);
 	}
-	
+
 	private static String getBytesLeft(Torrent t) {
 		 long total = t.getInformationManager().getStatsInfo().getNumBytesLeft();
 		 return humanBytes(total);
 	}
-	
+
 	private static String getBytesDownloaded(Torrent t) {
 		long total = t.getInformationManager().getStatsInfo().getNumBytesDownloaded();
 		return humanBytes(total);
 	}
-	
+
 	private static String getPiecesLeft(Torrent t) {
 		return t.getInformationManager().getStatsInfo().getNumPiecesLeft() + "";
 	}
-	
+
 	private static String getPeers(Torrent t) {
 		int known = t.getInformationManager().getAnnounceInfo().getPeerCount();
 		int connected = t.getInformationManager().getStatsInfo().getNumPeers();
 		return "(" + connected + ") " + known;
 	}
-	
+
 	private static String humanBytes(long bytes) {
 		String[] suffix = {"B","KiB","MiB","GiB"};
+		double b2 = bytes;
 		int pos = 0;
-		while(bytes > 1024) {
-			bytes /= 1024;
+		while(b2 > 1024) {
+			b2 /= 1024;
 			pos ++;
 		}
-		return bytes + suffix[pos];
+		String speed = (pos > 1) ? String.format("%.2f",b2) : ((int) b2 + "");
+		return speed + suffix[pos];
 	}
 }

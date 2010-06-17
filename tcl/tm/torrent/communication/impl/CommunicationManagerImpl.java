@@ -147,8 +147,8 @@ public class CommunicationManagerImpl implements CommunicationManager {
 	 *
 	 * @return A piece which can be downloaded by the Peer, given the bitfield they have provided.
 	 **/
-	public Piece assignPiece(boolean[] bitfield, int piecesCompleted) {
-		return pieceRegistry.requestPiece(bitfield, piecesCompleted);
+	public Piece assignPiece(boolean[] bitfield, long completeTime) {
+		return pieceRegistry.requestPiece(bitfield, completeTime);
 	}
 
 	/**

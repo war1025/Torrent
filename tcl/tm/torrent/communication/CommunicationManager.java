@@ -66,7 +66,7 @@ public interface CommunicationManager extends Closeable {
 	 *
 	 * @return A piece which can be downloaded by the Peer, given the bitfield they have provided.
 	 **/
-	public Piece assignPiece(boolean[] bitfield, int piecesCompleted);
+	public Piece assignPiece(boolean[] bitfield, long completeTime);
 
 	/**
 	 * Called by a Peer to return a Piece it has been assigned.
